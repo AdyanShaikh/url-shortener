@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const cors = require('cors');
 const { LinkStore } = require('./store');
 const { generateCode } = require('./codegen');
 const { validateAndNormalizeUrl } = require('./validate');
@@ -8,6 +9,26 @@ const { validateAndNormalizeUrl } = require('./validate');
 function createApp() {
   const app = express();
   const store = new LinkStore();
+
+  // Allow the browser frontend to call the API from another origin.
+  // Set FRONTEND_ORIGIN to a comma-separated allowlist in production.
+  const configuredOrigins = (process.env.FRONTEND_ORIGIN || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  app.use(
+    cors({
+      origin: configuredOrigins.length
+        ? (origin, callback) => {
+            if (!origin || configuredOrigins.includes(origin)) {
+              return callback(null, true);
+            }
+            return callback(new Error('origin not allowed by CORS'));
+          }
+        : true,
+    }),
+  );
 
   app.use(express.json({ limit: '10kb' }));
 
@@ -30,7 +51,6 @@ function createApp() {
     const url = validateAndNormalizeUrl(rawUrl);
 
     if (url === null) {
-      // Reject before anything is stored.
       return res.status(400).json({ error: 'url is missing or is not a valid http(s) URL' });
     }
 
@@ -39,7 +59,6 @@ function createApp() {
       return res.status(200).json(toPayload(existing, req));
     }
 
-    // Regenerate on the (astronomically unlikely) chance of a code collision.
     let code = generateCode();
     while (store.hasCode(code)) {
       code = generateCode();
@@ -49,14 +68,12 @@ function createApp() {
     return res.status(201).json(toPayload(row, req));
   });
 
-  // Stats for a code - does NOT count as a follow.
   app.get('/api/links/:code', (req, res) => {
     const row = store.findByCode(req.params.code);
     if (!row) return res.status(404).json({ error: 'unknown code' });
     return res.status(200).json(toPayload(row, req));
   });
 
-  // Follow a short link. See README for why this is a 302, not a 301.
   app.get('/:code', (req, res) => {
     const row = store.recordClick(req.params.code);
     if (!row) return res.status(404).json({ error: 'unknown code' });
