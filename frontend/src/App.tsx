@@ -23,7 +23,7 @@ type LinkRecord = {
   shortUrl: string;
 };
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const API_URL = (import.meta.env.VITE_API_URL || window.location.origin).replace(/\/$/, '');
 const STORAGE_KEY = 'shortly-links';
 const THEME_KEY = 'shortly-theme';
 
@@ -160,15 +160,7 @@ function App() {
           <form className="shorten-form" onSubmit={shorten}>
             <div className="input-wrap">
               <Link2 size={20} />
-              <input
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                placeholder="Paste your long URL here..."
-                type="url"
-                autoComplete="url"
-                spellCheck={false}
-                aria-label="Long URL"
-              />
+              <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="Paste your long URL here..." type="url" autoComplete="url" spellCheck={false} aria-label="Long URL" />
               {url && <button type="button" className="clear-input" onClick={() => setUrl('')} aria-label="Clear URL"><X size={17} /></button>}
             </div>
             <button className="shorten-button" disabled={loading} type="submit">
@@ -188,10 +180,7 @@ function App() {
                   <span>{result.url}</span>
                 </div>
                 <div className="result-actions">
-                  <button className="secondary-button" onClick={() => copy(result.shortUrl)}>
-                    {copied ? <Check size={17} /> : <Clipboard size={17} />}
-                    {copied ? 'Copied' : 'Copy'}
-                  </button>
+                  <button className="secondary-button" onClick={() => copy(result.shortUrl)}>{copied ? <Check size={17} /> : <Clipboard size={17} />}{copied ? 'Copied' : 'Copy'}</button>
                   <a className="primary-icon-button" href={result.shortUrl} target="_blank" rel="noreferrer" aria-label="Open short link"><ExternalLink size={17} /></a>
                 </div>
               </div>
@@ -201,33 +190,18 @@ function App() {
 
         <section className="history-section">
           <div className="section-heading">
-            <div>
-              <p className="section-kicker">YOUR LINKS</p>
-              <h2>Recent links</h2>
-            </div>
-            {history.length > 0 && (
-              <div className="search-box">
-                <Search size={17} />
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search links" aria-label="Search links" />
-              </div>
-            )}
+            <div><p className="section-kicker">YOUR LINKS</p><h2>Recent links</h2></div>
+            {history.length > 0 && <div className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search links" aria-label="Search links" /></div>}
           </div>
 
           {filteredHistory.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon"><Link2 size={23} /></div>
-              <h3>{history.length ? 'No links found' : 'Your links will appear here'}</h3>
-              <p>{history.length ? 'Try a different search.' : 'Shorten your first URL above and keep track of it here.'}</p>
-            </div>
+            <div className="empty-state"><div className="empty-icon"><Link2 size={23} /></div><h3>{history.length ? 'No links found' : 'Your links will appear here'}</h3><p>{history.length ? 'Try a different search.' : 'Shorten your first URL above and keep track of it here.'}</p></div>
           ) : (
             <div className="link-list">
               {filteredHistory.map((item) => (
                 <article className="history-card" key={item.code}>
                   <div className="history-icon"><Link2 size={18} /></div>
-                  <div className="history-main">
-                    <a className="history-short" href={item.shortUrl} target="_blank" rel="noreferrer">{item.shortUrl}</a>
-                    <span className="history-original">{item.url}</span>
-                  </div>
+                  <div className="history-main"><a className="history-short" href={item.shortUrl} target="_blank" rel="noreferrer">{item.shortUrl}</a><span className="history-original">{item.url}</span></div>
                   <div className="click-count"><BarChart3 size={15} /><strong>{item.clicks}</strong><span>clicks</span></div>
                   <div className="history-actions">
                     <button onClick={() => copy(item.shortUrl)} aria-label="Copy short URL"><Clipboard size={17} /></button>
@@ -241,9 +215,7 @@ function App() {
         </section>
       </main>
 
-      <footer className="footer container">
-        <span>Shortly</span><span>Fast, minimal URL shortening.</span>
-      </footer>
+      <footer className="footer container"><span>Shortly</span><span>Fast, minimal URL shortening.</span></footer>
 
       {stats && (
         <div className="modal-backdrop" onMouseDown={() => setStats(null)}>
