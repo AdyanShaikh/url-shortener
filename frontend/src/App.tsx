@@ -36,6 +36,7 @@ function App() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [dark, setDark] = useState(() => localStorage.getItem(THEME_KEY) === 'dark');
 
   useEffect(() => {
@@ -46,6 +47,20 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
   }, [history]);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_URL}/health`)
+      .then((response) => {
+        if (active) setApiOnline(response.ok);
+      })
+      .catch(() => {
+        if (active) setApiOnline(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredHistory = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -76,9 +91,11 @@ function App() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Unable to shorten this URL.');
 
+      setApiOnline(true);
       setResult(data);
       setHistory((current) => [data, ...current.filter((item) => item.code !== data.code)]);
     } catch (err) {
+      setApiOnline(false);
       setError(err instanceof Error ? err.message : 'Something went wrong. Check your API URL.');
     } finally {
       setLoading(false);
@@ -101,10 +118,12 @@ function App() {
       const response = await fetch(`${API_URL}/api/links/${encodeURIComponent(item.code)}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'Unable to load statistics.');
+      setApiOnline(true);
       setStats(data);
       setHistory((current) => current.map((link) => (link.code === data.code ? data : link)));
       if (result?.code === data.code) setResult(data);
     } catch (err) {
+      setApiOnline(false);
       setError(err instanceof Error ? err.message : 'Unable to load statistics.');
     }
   }
@@ -115,6 +134,8 @@ function App() {
     if (stats?.code === code) setStats(null);
   }
 
+  const statusLabel = apiOnline === null ? 'Checking API' : apiOnline ? 'API connected' : 'API offline';
+
   return (
     <div className="app-shell">
       <header className="nav container">
@@ -123,7 +144,7 @@ function App() {
           <span>Shortly</span>
         </a>
         <div className="nav-actions">
-          <span className="api-status"><i /> API connected</span>
+          <span className={`api-status ${apiOnline === false ? 'offline' : ''}`}><i /> {statusLabel}</span>
           <button className="icon-button" onClick={() => setDark((value) => !value)} aria-label="Toggle theme">
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -156,7 +177,7 @@ function App() {
             </button>
           </form>
 
-          {error && <div className="error-banner">{error}</div>}
+          {error && <div className="error-banner" role="alert">{error}</div>}
 
           {result && (
             <section className="result-card reveal">
@@ -187,7 +208,7 @@ function App() {
             {history.length > 0 && (
               <div className="search-box">
                 <Search size={17} />
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search links" />
+                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search links" aria-label="Search links" />
               </div>
             )}
           </div>
@@ -227,7 +248,7 @@ function App() {
       {stats && (
         <div className="modal-backdrop" onMouseDown={() => setStats(null)}>
           <div className="stats-modal" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="modal-header"><div><p className="section-kicker">LINK ANALYTICS</p><h2>Link statistics</h2></div><button className="close-button" onClick={() => setStats(null)}><X size={18} /></button></div>
+            <div className="modal-header"><div><p className="section-kicker">LINK ANALYTICS</p><h2>Link statistics</h2></div><button className="close-button" onClick={() => setStats(null)} aria-label="Close statistics"><X size={18} /></button></div>
             <div className="stat-url">{stats.shortUrl}</div>
             <div className="big-stat"><span>Total clicks</span><strong>{stats.clicks}</strong></div>
             <div className="modal-meta"><span>Created</span><strong>{formatDate(stats.createdAt)}</strong></div>
