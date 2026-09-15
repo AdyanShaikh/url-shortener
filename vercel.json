@@ -4,10 +4,6 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api"
-    },
-    {
       "source": "/:code",
       "destination": "/api/redirect?code=:code"
     }
