@@ -36,7 +36,7 @@ The API tests use the in-memory store, so they do not require a database.
 
 ## Vercel deployment
 
-This repository is configured as **one Vercel project**. Vercel builds the Vite frontend from `frontend/` and exposes the Express application from `api/index.js` as a Vercel Function. Vercel officially supports Express applications and Node.js Functions. citeturn0search1turn0search0
+This repository is configured as **one Vercel project**. Vercel builds the Vite frontend from `frontend/` and exposes the Express application from `api/index.js` as a Vercel Function.
 
 The resulting routes are:
 
