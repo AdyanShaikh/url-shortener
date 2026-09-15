@@ -1,17 +1,19 @@
 {
   "name": "url-shortener",
   "version": "1.0.0",
-  "description": "Minimal HTTP URL shortener: create, follow, and count links",
+  "description": "Minimal HTTP URL shortener with a Vercel-hosted React frontend and Express API",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "build": "npm --prefix frontend run build"
   },
   "engines": {
-    "node": ">=18"
+    "node": "24.x"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.16.3"
   }
 }
